@@ -5,17 +5,8 @@ sudo apt updte
 sudo apt install -y nginx
 sudo ufw allow 'Nginx HTTP'
 
-echo "Hello World" > /var/www/html/index.html
-echo "Ceci n'est pas une page" > /var/www/html/404.html
-printf %s "server {
-    listen 80;
-    listen [::]:80 default_server;
-    root /var/www/html;
-    index index.html;
-    location /redirect_me {
-        return 301 https://www.youtube.com/watch?v=QH2-TGUlwu4;
-    }
-    error_page 404 /404.html;
-}" > /etc/nginx/sites-enabled/default
-
+echo "Hello World" > /var/www/html/index.nginx-debian.html
+echo "Ceci n'est pas une page" | sudo tee /usr/share/nginx/html/404.html
+newlines="\\\terror_page 404 /404.html;\n\tlocation = /404.html {\n\t\troot /usr/share/nginx/html;\n\t\tinternal;\n\t}"
+sudo sed -i "27i $newlines" /etc/nginx/sites-available/default
 sudo service nginx restart
