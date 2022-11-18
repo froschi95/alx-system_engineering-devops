@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # Configure Nginx
 
-apt updte
-apt install -y nginx
+sudo apt updte
+sudo apt install -y nginx
+sudo ufw allow 'Nginx HTTP'
 
 echo "Hello World" > /var/www/html/index.html
 echo "Ceci n'est pas une page" > /var/www/html/404.html
@@ -17,4 +18,4 @@ printf %s "server {
     error_page 404 /404.html;
 }" > /etc/nginx/sites-enabled/default
 
-service nginx restart
+sudo service nginx restart
