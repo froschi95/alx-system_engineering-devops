@@ -1,3 +1,8 @@
+listen http-in                                                                                                                                                                                
+        bind :80                                                                                                                                                                              
+        balance roundrobin                                                                                                                                                                    
+        server 43850-web-01 52.203.192.134 check port 80                                                                                                                                      
+        server 43850-web-02 52.3.246.210 check port 80 
 global
         log /dev/log    local0
 	log /dev/log    local1 notice
@@ -39,7 +44,7 @@ frontend www-http
     default_backend www-backend
 
 frontend www-https
-    bind   0.0.0.0:443 ssl crt /etc/haproxy/certs/kelvx.tech.pem
+    bind   0.0.0.0:443 ssl crt /etc/haproxy/certs/frankcs.tech.pem
     http-request set-header X-Forwarded-Proto https
     acl    letsencrypt-acl path_beg /.well-known/acme-challenge/
     use_backend letsencrypt-backend if letsencrypt-acl
@@ -49,7 +54,7 @@ backend www-backend
     balance  roundrobin
     redirect scheme https if !{ ssl_fc }
     server 43850-web-01 52.203.192.134:80 check
-    server 43850-web-02 34.232.72.142:80 check
+    server 43850-web-02 52.3.246.210:80 check
 
 backend letsencrypt-backend
-    server letsencrypt 127.0.0.1:54321
+    server letsencrypt 127.0.0.1:8898
