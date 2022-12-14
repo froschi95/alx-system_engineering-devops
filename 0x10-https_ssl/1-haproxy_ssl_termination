@@ -1,11 +1,6 @@
-listen http-in                                                                                                                                                                                
-        bind :80                                                                                                                                                                              
-        balance roundrobin                                                                                                                                                                    
-        server 43850-web-01 52.203.192.134 check port 80                                                                                                                                      
-        server 43850-web-02 52.3.246.210 check port 80 
 global
-        log /dev/log    local0
-	log /dev/log    local1 notice
+	log /dev/log	local0
+	log /dev/log	local1 notice
 	chroot /var/lib/haproxy
 	stats socket /run/haproxy/admin.sock mode 660 level admin expose-fd listeners
 	stats timeout 30s
@@ -14,22 +9,26 @@ global
 	daemon
 
 	# Default SSL material locations
-	ca-base /etc/ssl/certs 
+	ca-base /etc/ssl/certs
 	crt-base /etc/ssl/private
 
 	# See: https://ssl-config.mozilla.org/#server=haproxy&server-version=2.0.3&config=intermediate
-	ssl-default-bind-ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384
-	ssl-default-bind-ciphersuites TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256
-	ssl-default-bind-options ssl-min-ver TLSv1.2 no-tls-tickets
+        ssl-default-bind-ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384
+        ssl-default-bind-ciphersuites TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256
+        ssl-default-bind-options ssl-min-ver TLSv1.2 no-tls-tickets
+	maxconn 2048
+	tune.ssl.default-dh-param 2048
 
 defaults
-        log     global
-	mode    http
-	option  httplog
-	option  dontlognull
-	timeout connect 5000
-	timeout client  50000
-	timeout server  50000
+	log	global
+	mode	http
+	option	httplog
+	option	dontlognull
+        timeout connect 5000
+        timeout client  50000
+        timeout server  50000
+	option forwardfor
+	option http-server-close
 	errorfile 400 /etc/haproxy/errors/400.http
 	errorfile 403 /etc/haproxy/errors/403.http
 	errorfile 408 /etc/haproxy/errors/408.http
@@ -39,22 +38,22 @@ defaults
 	errorfile 504 /etc/haproxy/errors/504.http
 
 frontend www-http
-    bind   0.0.0.0:80
-    http-request set-header X-Forwarded-Proto http
-    default_backend www-backend
+	bind :80
+	http-request set-header X-Forwarded-Proto http
+	default_backend www-backend
 
 frontend www-https
-    bind   0.0.0.0:443 ssl crt /etc/haproxy/certs/frankcs.tech.pem
-    http-request set-header X-Forwarded-Proto https
-    acl    letsencrypt-acl path_beg /.well-known/acme-challenge/
-    use_backend letsencrypt-backend if letsencrypt-acl
-    default_backend www-backend
+	bind :443 ssl crt /etc/haproxy/certs/www.frankcs.tech.pem
+	http-request set-header X-Forwarded-Proto https
+	acl letsencrypt-acl path_beg /.well-known/acme-challenge/
+	use_backend letsencrypt-backend if letsencrypt-acl
+	default_backend www-backend
 
 backend www-backend
-    balance  roundrobin
-    redirect scheme https if !{ ssl_fc }
-    server 43850-web-01 52.203.192.134:80 check
-    server 43850-web-02 52.3.246.210:80 check
+	balance roundrobin
+	redirect scheme https if !{ ssl_fc }
+	server 43850-web-01 52.203.192.134 check port 80
+	server 43850-web-02 54.84.229.190 check port 80
 
 backend letsencrypt-backend
-    server letsencrypt 127.0.0.1:8898
+   server letsencrypt 127.0.0.1:8889
